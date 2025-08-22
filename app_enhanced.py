@@ -230,6 +230,11 @@ def show_dashboard_sidebar(news_client, gemini_client, data_manager):
         index=0 if preferences.get('frequency') == 'daily' else 1
     )
     
+    # AI Processing Options
+    st.subheader("🤖 AI Processing")
+    enable_ai = st.checkbox("Enable AI Summaries", value=False, help="AI summaries take longer but provide better insights")
+    max_articles = st.slider("Max Articles to Process", 5, 20, 10, help="More articles = longer loading time")
+    
     # Update preferences
     if st.button("🔄 Update & Fetch News"):
         with st.spinner("Updating preferences and fetching news..."):
@@ -240,14 +245,67 @@ def show_dashboard_sidebar(news_client, gemini_client, data_manager):
             
             # Fetch news
             if selected_interests:
+                # Step 1: Fetch articles
+                st.info("📡 Fetching articles from NewsAPI...")
                 articles = news_client.fetch_articles_by_interests(selected_interests, frequency)
                 
-                # Enhance articles with AI summaries
                 if articles:
-                    articles = gemini_client.batch_summarize(articles, delay=0.5)
-                
-                st.session_state.news_data = articles
-                st.success(f"✅ Fetched {len(articles)} articles!")
+                    # Limit articles for faster processing
+                    articles = articles[:max_articles]
+                    
+                    # Step 2: Add basic categorization
+                    st.info("🏷️ Categorizing articles...")
+                    for article in articles:
+                        # Simple categorization based on title/description
+                        title_lower = article.get('title', '').lower()
+                        desc_lower = article.get('description', '').lower()
+                        
+                        if any(word in title_lower or word in desc_lower for word in ['tech', 'ai', 'software', 'digital']):
+                            article['category'] = 'Technology'
+                        elif any(word in title_lower or word in desc_lower for word in ['business', 'economy', 'market', 'finance']):
+                            article['category'] = 'Business'
+                        elif any(word in title_lower or word in desc_lower for word in ['science', 'research', 'study']):
+                            article['category'] = 'Science'
+                        elif any(word in title_lower or word in desc_lower for word in ['politics', 'government', 'election']):
+                            article['category'] = 'Politics'
+                        elif any(word in title_lower or word in desc_lower for word in ['sport', 'football', 'basketball', 'tennis']):
+                            article['category'] = 'Sports'
+                        elif any(word in title_lower or word in desc_lower for word in ['movie', 'film', 'music', 'celebrity']):
+                            article['category'] = 'Entertainment'
+                        else:
+                            article['category'] = 'General'
+                    
+                    # Step 3: AI Processing (optional)
+                    if enable_ai and articles:
+                        st.info("🤖 Generating AI summaries (this may take a moment)...")
+                        progress_bar = st.progress(0)
+                        
+                        for i, article in enumerate(articles):
+                            try:
+                                # Generate AI summary
+                                summary = gemini_client.summarize_article(article)
+                                if summary:
+                                    article['ai_summary'] = summary
+                                
+                                # Update progress
+                                progress = (i + 1) / len(articles)
+                                progress_bar.progress(progress)
+                                
+                            except Exception as e:
+                                st.warning(f"Could not summarize article {i+1}: {str(e)}")
+                                continue
+                        
+                        progress_bar.empty()
+                    else:
+                        # Add basic reading time estimation
+                        for article in articles:
+                            text_length = len(article.get('title', '') + article.get('description', ''))
+                            article['reading_time'] = max(1, text_length // 200)  # Rough estimate
+                    
+                    st.session_state.news_data = articles
+                    st.success(f"✅ Fetched {len(articles)} articles!")
+                else:
+                    st.error("No articles found. Please try different interests or check your API key.")
             else:
                 st.warning("Please select at least one interest category.")
     
