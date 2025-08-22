@@ -40,6 +40,15 @@ class GeminiAPIClient:
         except Exception as e:
             return f"Summary unavailable: {str(e)}"
     
+    def summarize_article_object(self, article: dict, max_length: int = 200) -> str:
+        """Summarize an article object directly"""
+        try:
+            title = article.get('title', '')
+            content = article.get('description', '') or article.get('content', '')
+            return self.summarize_article(title, content, max_length)
+        except Exception as e:
+            return f"Summary unavailable: {str(e)}"
+    
     def categorize_article(self, title: str, content: str) -> str:
         """Categorize an article based on its content"""
         try:

@@ -231,9 +231,20 @@ def show_dashboard_sidebar(news_client, gemini_client, data_manager):
     )
     
     # AI Processing Options
-    st.subheader("🤖 AI Processing")
-    enable_ai = st.checkbox("Enable AI Summaries", value=False, help="AI summaries take longer but provide better insights")
-    max_articles = st.slider("Max Articles to Process", 5, 20, 10, help="More articles = longer loading time")
+    st.markdown('<div class="stats-container">', unsafe_allow_html=True)
+    st.subheader("🤖 AI Processing Options")
+    
+    enable_ai = st.checkbox("✨ Enable AI Summaries", value=True, help="AI summaries take longer but provide better insights")
+    max_articles = st.slider("📊 Max Articles to Process", 5, 20, 10, help="More articles = longer loading time")
+    
+    # Show AI status
+    if enable_ai:
+        st.success("✅ AI Summaries will be generated for each article")
+        st.info("💡 AI will provide: Smart summaries, Key points, Reading time estimates")
+    else:
+        st.warning("⚠️ AI Summaries disabled - articles will show basic descriptions only")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Update preferences
     if st.button("🔄 Update & Fetch News"):
@@ -283,8 +294,8 @@ def show_dashboard_sidebar(news_client, gemini_client, data_manager):
                         for i, article in enumerate(articles):
                             try:
                                 # Generate AI summary
-                                summary = gemini_client.summarize_article(article)
-                                if summary:
+                                summary = gemini_client.summarize_article_object(article)
+                                if summary and not summary.startswith("Summary unavailable"):
                                     article['ai_summary'] = summary
                                 
                                 # Update progress
