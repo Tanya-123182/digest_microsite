@@ -280,11 +280,11 @@ def show_dashboard_sidebar(news_client, gemini_client, data_manager):
                             article['category'] = 'Entertainment'
                         else:
                             article['category'] = 'General'
-                                         
-                     # Add basic reading time estimation for all articles
-                     for article in articles:
-                         text_length = len(article.get('title', '') + article.get('description', ''))
-                         article['reading_time'] = max(1, text_length // 200)  # Rough estimate
+                    
+                    # Add basic reading time estimation for all articles
+                    for article in articles:
+                        text_length = len(article.get('title', '') + article.get('description', ''))
+                        article['reading_time'] = max(1, text_length // 200)  # Rough estimate
                     
                     st.session_state.news_data = articles
                     st.success(f"✅ Fetched {len(articles)} articles!")
