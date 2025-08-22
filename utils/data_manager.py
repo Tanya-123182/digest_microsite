@@ -98,6 +98,26 @@ class DataManager:
             print(f"Error removing article: {str(e)}")
             return False
     
+    def update_saved_article(self, updated_article: dict) -> bool:
+        """Update a saved article with new data (like AI summary)"""
+        try:
+            saved_articles = self.load_saved_articles()
+            url = updated_article.get('url')
+            
+            # Find and update the article
+            for i, article in enumerate(saved_articles):
+                if article.get('url') == url:
+                    saved_articles[i] = updated_article
+                    
+                    with open(self.saved_articles_file, 'w') as f:
+                        json.dump(saved_articles, f, indent=2)
+                    return True
+            
+            return False  # Article not found
+        except Exception as e:
+            print(f"Error updating saved article: {str(e)}")
+            return False
+    
     def save_rating(self, article_url: str, rating: int, user_comment: str = "") -> bool:
         """Save a user rating for an article"""
         try:

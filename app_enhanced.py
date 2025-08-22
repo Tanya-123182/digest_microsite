@@ -230,21 +230,16 @@ def show_dashboard_sidebar(news_client, gemini_client, data_manager):
         index=0 if preferences.get('frequency') == 'daily' else 1
     )
     
-    # AI Processing Options
-    st.markdown('<div class="stats-container">', unsafe_allow_html=True)
-    st.subheader("🤖 AI Processing Options")
-    
-    enable_ai = st.checkbox("✨ Enable AI Summaries", value=True, help="AI summaries take longer but provide better insights")
-    max_articles = st.slider("📊 Max Articles to Process", 5, 20, 10, help="More articles = longer loading time")
-    
-    # Show AI status
-    if enable_ai:
-        st.success("✅ AI Summaries will be generated for each article")
-        st.info("💡 AI will provide: Smart summaries, Key points, Reading time estimates")
-    else:
-        st.warning("⚠️ AI Summaries disabled - articles will show basic descriptions only")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+         # Article Processing Options
+     st.markdown('<div class="stats-container">', unsafe_allow_html=True)
+     st.subheader("📊 Article Processing Options")
+     
+     max_articles = st.slider("📊 Max Articles to Fetch", 5, 20, 10, help="More articles = longer loading time")
+     
+     # Show AI status
+     st.info("💡 AI Summaries are now available on-demand! Click the 🤖 AI Summary button on any article to generate a smart summary.")
+     
+     st.markdown('</div>', unsafe_allow_html=True)
     
     # Update preferences
     if st.button("🔄 Update & Fetch News"):
@@ -286,32 +281,10 @@ def show_dashboard_sidebar(news_client, gemini_client, data_manager):
                         else:
                             article['category'] = 'General'
                     
-                    # Step 3: AI Processing (optional)
-                    if enable_ai and articles:
-                        st.info("🤖 Generating AI summaries (this may take a moment)...")
-                        progress_bar = st.progress(0)
-                        
-                        for i, article in enumerate(articles):
-                            try:
-                                # Generate AI summary
-                                summary = gemini_client.summarize_article_object(article)
-                                if summary and not summary.startswith("Summary unavailable"):
-                                    article['ai_summary'] = summary
-                                
-                                # Update progress
-                                progress = (i + 1) / len(articles)
-                                progress_bar.progress(progress)
-                                
-                            except Exception as e:
-                                st.warning(f"Could not summarize article {i+1}: {str(e)}")
-                                continue
-                        
-                        progress_bar.empty()
-                    else:
-                        # Add basic reading time estimation
-                        for article in articles:
-                            text_length = len(article.get('title', '') + article.get('description', ''))
-                            article['reading_time'] = max(1, text_length // 200)  # Rough estimate
+                                         # Add basic reading time estimation for all articles
+                     for article in articles:
+                         text_length = len(article.get('title', '') + article.get('description', ''))
+                         article['reading_time'] = max(1, text_length // 200)  # Rough estimate
                     
                     st.session_state.news_data = articles
                     st.success(f"✅ Fetched {len(articles)} articles!")
@@ -422,7 +395,7 @@ def display_enhanced_article_card(article, data_manager, index=0):
                 st.write(f"• {point}")
         
         # Article actions
-        col_action1, col_action2, col_action3, col_action4 = st.columns(4)
+        col_action1, col_action2, col_action3, col_action4, col_action5 = st.columns(5)
         
         with col_action1:
             if st.button("💾 Save", key=f"save_{article_key}"):
@@ -444,6 +417,23 @@ def display_enhanced_article_card(article, data_manager, index=0):
         with col_action4:
             if st.button("🔗 Open", key=f"open_{article_key}"):
                 st.markdown(f"[Open Article]({article.get('url', '')})")
+        
+        with col_action5:
+            if not article.get('ai_summary'):
+                if st.button("🤖 AI Summary", key=f"ai_summary_{article_key}"):
+                    with st.spinner("Generating AI summary..."):
+                        try:
+                            summary = gemini_client.summarize_article_object(article)
+                            if summary and not summary.startswith("Summary unavailable"):
+                                article['ai_summary'] = summary
+                                st.success("AI Summary generated!")
+                                st.rerun()
+                            else:
+                                st.error("Could not generate AI summary")
+                        except Exception as e:
+                            st.error(f"AI Summary failed: {str(e)}")
+            else:
+                st.success("✅ AI Summary ready")
     
     with col2:
         # Article image
@@ -498,27 +488,58 @@ def show_saved_articles(data_manager):
     elif sort_by == 'Category':
         filtered_articles.sort(key=lambda x: x.get('category', ''))
     
-    # Display articles
-    for i, article in enumerate(filtered_articles):
-        st.markdown('<div class="article-card">', unsafe_allow_html=True)
-        
-        col1, col2 = st.columns([4, 1])
-        
-        with col1:
-            st.subheader(article.get('title', 'No title'))
-            st.caption(f"📅 {article.get('publishedAt', 'Unknown date')} | 📰 {article.get('source', {}).get('name', 'Unknown source')}")
-            st.write(article.get('description', 'No description available.'))
+            # Display articles
+        for i, article in enumerate(filtered_articles):
+            st.markdown('<div class="article-card">', unsafe_allow_html=True)
             
-            if st.button(f"🗑️ Remove", key=f"remove_{i}"):
-                data_manager.remove_saved_article(article.get('url', ''))
-                st.success("Article removed!")
-                st.rerun()
-        
-        with col2:
-            if article.get('urlToImage'):
-                st.image(article.get('urlToImage'), width=100)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+            col1, col2 = st.columns([4, 1])
+            
+            with col1:
+                st.subheader(article.get('title', 'No title'))
+                st.caption(f"📅 {article.get('publishedAt', 'Unknown date')} | 📰 {article.get('source', {}).get('name', 'Unknown source')}")
+                st.write(article.get('description', 'No description available.'))
+                
+                # Show AI summary if available
+                if article.get('ai_summary'):
+                    st.markdown(f'<div class="summary-box"><strong>🤖 AI Summary:</strong><br>{article.get("ai_summary")}</div>', unsafe_allow_html=True)
+                
+                # Action buttons
+                col_btn1, col_btn2, col_btn3 = st.columns(3)
+                
+                with col_btn1:
+                    if st.button(f"🗑️ Remove", key=f"remove_{i}"):
+                        data_manager.remove_saved_article(article.get('url', ''))
+                        st.success("Article removed!")
+                        st.rerun()
+                
+                with col_btn2:
+                    if not article.get('ai_summary'):
+                        if st.button(f"🤖 AI Summary", key=f"ai_summary_saved_{i}"):
+                            with st.spinner("Generating AI summary..."):
+                                try:
+                                    summary = gemini_client.summarize_article_object(article)
+                                    if summary and not summary.startswith("Summary unavailable"):
+                                        article['ai_summary'] = summary
+                                        # Update saved article with AI summary
+                                        data_manager.update_saved_article(article)
+                                        st.success("AI Summary generated and saved!")
+                                        st.rerun()
+                                    else:
+                                        st.error("Could not generate AI summary")
+                                except Exception as e:
+                                    st.error(f"AI Summary failed: {str(e)}")
+                    else:
+                        st.success("✅ AI Summary ready")
+                
+                with col_btn3:
+                    if st.button(f"📤 Share", key=f"share_saved_{i}"):
+                        st.write(f"Share this article: {article.get('url', '')}")
+            
+            with col2:
+                if article.get('urlToImage'):
+                    st.image(article.get('urlToImage'), width=100)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
 
 def show_analytics_sidebar(data_manager):
     """Show analytics sidebar"""
