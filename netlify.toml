@@ -1,0 +1,14 @@
+[build]
+  command = "bash setup.sh"
+  publish = "."
+
+[build.environment]
+  PYTHON_VERSION = "3.12.5"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[functions]
+  directory = "functions"
