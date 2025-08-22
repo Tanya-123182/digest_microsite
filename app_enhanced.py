@@ -200,7 +200,7 @@ def main():
     if st.session_state.current_view == 'Dashboard':
         show_dashboard(news_client, gemini_client, data_manager)
     elif st.session_state.current_view == 'Saved Articles':
-        show_saved_articles(data_manager)
+        show_saved_articles(gemini_client, data_manager)
     elif st.session_state.current_view == 'Analytics':
         show_analytics(data_manager)
     elif st.session_state.current_view == 'Settings':
@@ -456,7 +456,7 @@ def show_saved_sidebar(data_manager):
             data_manager.clear_all_data()
             st.success("All saved articles cleared!")
 
-def show_saved_articles(data_manager):
+def show_saved_articles(gemini_client, data_manager):
     """Show saved articles view"""
     st.header("📚 Your Saved Articles")
     
