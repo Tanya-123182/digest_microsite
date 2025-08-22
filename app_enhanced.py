@@ -230,16 +230,16 @@ def show_dashboard_sidebar(news_client, gemini_client, data_manager):
         index=0 if preferences.get('frequency') == 'daily' else 1
     )
     
-         # Article Processing Options
-     st.markdown('<div class="stats-container">', unsafe_allow_html=True)
-     st.subheader("📊 Article Processing Options")
-     
-     max_articles = st.slider("📊 Max Articles to Fetch", 5, 20, 10, help="More articles = longer loading time")
-     
-     # Show AI status
-     st.info("💡 AI Summaries are now available on-demand! Click the 🤖 AI Summary button on any article to generate a smart summary.")
-     
-     st.markdown('</div>', unsafe_allow_html=True)
+    # Article Processing Options
+    st.markdown('<div class="stats-container">', unsafe_allow_html=True)
+    st.subheader("📊 Article Processing Options")
+    
+    max_articles = st.slider("📊 Max Articles to Fetch", 5, 20, 10, help="More articles = longer loading time")
+    
+    # Show AI status
+    st.info("💡 AI Summaries are now available on-demand! Click the 🤖 AI Summary button on any article to generate a smart summary.")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Update preferences
     if st.button("🔄 Update & Fetch News"):
@@ -280,8 +280,8 @@ def show_dashboard_sidebar(news_client, gemini_client, data_manager):
                             article['category'] = 'Entertainment'
                         else:
                             article['category'] = 'General'
-                    
-                                         # Add basic reading time estimation for all articles
+                                         
+                     # Add basic reading time estimation for all articles
                      for article in articles:
                          text_length = len(article.get('title', '') + article.get('description', ''))
                          article['reading_time'] = max(1, text_length // 200)  # Rough estimate
