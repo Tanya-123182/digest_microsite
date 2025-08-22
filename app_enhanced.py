@@ -354,12 +354,12 @@ def show_dashboard(news_client, gemini_client, data_manager):
         for category, articles in categorized_articles.items():
             st.markdown(f'<div class="category-card"><h3>📂 {category} ({len(articles)} articles)</h3></div>', unsafe_allow_html=True)
             
-            for i, article in enumerate(articles):
-                display_enhanced_article_card(article, data_manager, i)
+                         for i, article in enumerate(articles):
+                 display_enhanced_article_card(article, gemini_client, data_manager, i)
     else:
         st.info("👆 Select your interests and update preferences to see your personalized news feed!")
 
-def display_enhanced_article_card(article, data_manager, index=0):
+def display_enhanced_article_card(article, gemini_client, data_manager, index=0):
     """Display an enhanced article card with more features"""
     # Create unique key using article title, URL, and index
     import hashlib
